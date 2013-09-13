@@ -6,6 +6,8 @@
     <!-- Bootstrap -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" media='screen'>
     <script src='//ajax.googleapis.com/ajax/libs/angularjs/1.2.0rc1/angular.min.js'></script>
+    <script src="//cdn.firebase.com/v0/firebase.js"></script>
+    <script src="//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js"></script>
     <script src='js/app.js'></script>
     <style type='text/css'>
       #karaoke-video {
@@ -26,26 +28,58 @@
         </div>
       </div>
       <div class='row'>
-        <div class='col-md-3'>
-          <h2>Playlist</h2>
-          <button ng-click='playNext()'>Play Next Song</button>
-          <ul>
-            <li ng-repeat='song in playList' ng-click='removeSong(song)'>
-              {{song.artist}} - {{song.title}}
-            </li>
-          </ul>
+        <div class='col-md-3' ng-class='{"col-md-3": !slave, "col-md-12": slave}'>
+          <button ng-hide='slave' class='btn btn-sm btn-warning' ng-click='playNext()'><span class='glyphicon glyphicon-forward'></span> Next</button>
+          <button ng-hide='slave' class='btn btn-sm btn-info' ng-click='slaveMode()'>Client only</button>
+          <table class='table'>
+            <thead>
+              <tr>
+                <th>Playlist</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat='song in playList' ng-click='removeSong(song)'>
+                <td>
+                  {{song.artist}} - {{song.title}}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class='col-md-9'>
+        <div class='col-md-9' ng-hide='slave'>
           <embed type='application/x-vlc-plugin' id='karaoke-video'>
           </embed>
         </div>
       </div>
       <div class='row'>
         <div class='col-md-3'>
-          <form role='form'>
-            <label for='query'>Suchwort ({{visibleSongs.length}} Ergebnisse)</label>
-            <input class='form-control' id='query' ng-model='query'>
-          </form>
+          <div class='panel panel-default'>
+            <div class='panel-heading'>Find song</div>
+            <div class='panel-body'>
+              <form role='form'>
+                <label for='query'>Suchwort ({{visibleSongs.length}} Ergebnisse)</label>
+                <input class='form-control' id='query' ng-model='query'/>
+              </form>
+            </div>
+          </div>
+
+          <div class='panel panel-default'>
+            <div class='panel-heading'>Add a new song</div>
+            <div class='panel-body'>
+              <form role='form'>
+                <div class='form-group'>
+                  <label for='artist'>Artist</label>
+                  <input class='form-control' id='artist' ng-model='new_song.artist'/>
+                  <label for='title'>Title</label>
+                  <input class='form-control' id='title' ng-model='new_song.title'/>
+                  <label for='file'>Reference</label>
+                  <input class='form-control' id='file' ng-model='new_song.file'/>
+                </div>
+                <button class='btn btn-primary' ng-click='addSongToDB()'><span class='glyphicon glyphicon-plus'></span> Add Song</button>
+
+              </form>
+            </div>
+          </div>
         </div>
         <div class='col-md-9'>
           <table class='table table-striped table-hover'>

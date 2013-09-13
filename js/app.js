@@ -1,12 +1,10 @@
-window.karaokeApp = angular.module('karaokeApp', []);
+window.karaokeApp = angular.module('karaokeApp', ['firebase']);
 
-window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter', '$timeout', function($scope, $http, $filter, $timeout) {
+window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter', '$timeout', 'angularFire', function($scope, $http, $filter, $timeout, angularFire) {
 
-  var base = 'file:///home/roger/karaoke/';
   var vlc = document.getElementById('karaoke-video');
 
   $scope.checkForPlaying = function() {
-    console.log('checking');
     if(vlc.input.state == 6) {
       $scope.songPlaying = false;
       $scope.playNext();
@@ -25,7 +23,13 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
     $scope.visibleSongs = $filter('limitTo')($scope.visibleSongs, 250);
   }
 
+  var plref = new Firebase('https://irregaraoke.firebaseio.com/playlist');
+  var sref = new Firebase('https://irregaraoke.firebaseio.com/songs');
+  angularFire(plref, $scope, 'playList');
+  angularFire(sref, $scope, 'songs').then(filterSongs);
+
   $scope.$watch('query', filterSongs);
+  $scope.$watch('songs', filterSongs);
 
   $scope.setQuery = function(query) {
     $scope.query = query;
@@ -36,6 +40,16 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
     if($scope.playList.length == 1 && !$scope.songPlaying) {
       $scope.playNext();
     }
+  }
+
+  $scope.slaveMode = function() {
+    $scope.slave = true;
+  }
+
+  $scope.addSongToDB = function(){
+    $scope.songs.push($scope.new_song);
+    $scope.new_song = {};
+    filterSongs();
   }
 
   $scope.removeSong = function(song) {
@@ -54,24 +68,4 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
       $scope.songPlaying = true;
     }
   }
-
-
-  $http.get('source/songs').success(function(data) {
-    data = data.split('\n');
-    angular.forEach(data, function(line) {
-      var song = line.split("-");
-      var file = '';
-      if(song[2] && (song[2].substr('youtube') != -1)) {
-        file = song[2].replace(/^\s+|\s+$/g, '');
-      }
-      else {
-        file = base + line.replace('cdg', 'mp3');
-      }
-
-      if(line != "") {
-        $scope.songs.push({artist: song[0], title: song[1].replace(/\[(K|k)araoke\].cdg/, ''), file: file});
-      }
-    });
-    filterSongs();
-  });
 }]);
