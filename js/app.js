@@ -23,7 +23,7 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
     $scope.visibleSongs = $filter('limitTo')($scope.visibleSongs, 250);
   }
 
-  var plref = new Firebase('https://irregaraoke.firebaseio.com/playlist');
+  var plref = new Firebase('https://irregaraoke-db.firebaseio.com/playlist');
   var sref = new Firebase('https://irregaraoke-db.firebaseio.com/songs');
   angularFire(plref, $scope, 'playList');
   angularFire(sref, $scope, 'songs').then(filterSongs);
