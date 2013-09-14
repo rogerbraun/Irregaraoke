@@ -24,7 +24,7 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   var plref = new Firebase('https://irregaraoke.firebaseio.com/playlist');
-  var sref = new Firebase('https://irregaraoke.firebaseio.com/songs');
+  var sref = new Firebase('https://irregaraoke-db.firebaseio.com/songs');
   angularFire(plref, $scope, 'playList');
   angularFire(sref, $scope, 'songs').then(filterSongs);
 
@@ -58,6 +58,9 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   $scope.playNext = function() {
+    if($scope.slave) {
+      return;
+    }
     if($scope.playList.length > 0 ) {
       vlc.playlist.clear();
       var file = $scope.playList.shift().file;
