@@ -9,14 +9,46 @@
     <script src="//cdn.firebase.com/v0/firebase.js"></script>
     <script src="//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js"></script>
     <script src='js/app.js'></script>
+    <script src='js/players/vlc.js'></script>
+    <script src='js/lib/cdgmagic_cdgplayer.js'></script>
+    <script src='js/lib/cdgmagic_cdgdecoder_lowresource.js'></script>
+    <script src='js/players/cdg.js'></script>
     <style type='text/css'>
-      #karaoke-video {
+      .vlc-karaoke-video{
         width: 576px;
         height: 384px;
         padding: 20px;
         display:block;
         margin-left: auto;
         margin-right: auto;
+      }
+
+      #cdg_audio {
+        margin-left: auto;
+        margin-right: auto;
+        display:block;
+      }
+
+      #cdg_border, #cdg_canvas {
+        width: 576px;
+        height: 384px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 12px;
+        margin-bottom: 12px;
+      }
+
+      #cdg_canvas {
+        margin-left: auto;
+        margin-right: auto;
+        padding: 24px;
+      }
+
+      #cdg_canvas:-webkit-full-screen {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
@@ -28,9 +60,14 @@
         </div>
       </div>
       <div class='row'>
+        <div class='col-md-9' ng-hide='slave' id='video-box'>
+          <vlc-player ng-show='isCurrentPlayer("vlc")'></vlc-player>
+          <cdg-player ng-show='isCurrentPlayer("cdg")'></cdg-player>
+        </div>
         <div class='col-md-3' ng-class='{"col-md-3": !slave, "col-md-12": slave}'>
-          <button ng-hide='slave' class='btn btn-sm btn-warning' ng-click='playNext()'><span class='glyphicon glyphicon-forward'></span> Next</button>
-          <button ng-hide='slave' class='btn btn-sm btn-info' ng-click='slaveMode()'>Client only</button>
+          <button ng-hide='slave' class='btn btn-sm btn-warning' ng-click='skipSong()'><span class='glyphicon glyphicon-forward'></span> Next</button>
+          <button class='btn btn-sm btn-primary' ng-click='showNewSong()'><span class='glyphicon glyphicon-plus'></span> Add Song</button>
+          <button ng-hide='slave' class='btn btn-sm btn-info pull-right' ng-click='slaveMode()'>Client only</button>
           <table class='table'>
             <thead>
               <tr>
@@ -38,32 +75,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat='song in playList' ng-click='removeSong(song)'>
+              <tr ng-repeat='song in playList'>
                 <td>
-                  {{song.artist}} - {{song.title}}
+                  {{song.artist}} - {{song.title}} <button class='btn btn-xs btn-danger pull-right' ng-click='removeSong(song)'><span class='glyphicon glyphicon-minus'/></button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class='col-md-9' ng-hide='slave'>
-          <embed type='application/x-vlc-plugin' id='karaoke-video'>
-          </embed>
-        </div>
       </div>
       <div class='row'>
         <div class='col-md-3'>
-          <div class='panel panel-default'>
-            <div class='panel-heading'>Find song</div>
-            <div class='panel-body'>
-              <form role='form'>
-                <label for='query'>Suchwort ({{visibleSongs.length}} Ergebnisse)</label>
-                <input class='form-control' id='query' ng-model='query'/>
-              </form>
-            </div>
-          </div>
-
-          <div class='panel panel-default'>
+          <div class='panel panel-default' ng-show='addingSong'>
             <div class='panel-heading'>Add a new song</div>
             <div class='panel-body'>
               <form role='form'>
@@ -76,7 +99,17 @@
                   <input class='form-control' id='file' ng-model='new_song.file'/>
                 </div>
                 <button class='btn btn-primary' ng-click='addSongToDB()'><span class='glyphicon glyphicon-plus'></span> Add Song</button>
+                <button class='btn btn-danger' ng-click='hideNewSong()'>Cancel</button>
 
+              </form>
+            </div>
+          </div>
+          <div class='panel panel-default'>
+            <div class='panel-heading'>Find song</div>
+            <div class='panel-body'>
+              <form role='form'>
+                <label for='query'>Suchwort ({{visibleSongs.length}} Ergebnisse)</label>
+                <input class='form-control' id='query' ng-model='query'/>
               </form>
             </div>
           </div>
@@ -87,12 +120,14 @@
               <tr>
                 <th>Artist</th>
                 <th>Song</th>
+                <th></th>
               <tr>
             </thead>
             <tbody>
-              <tr ng-click='addSong(song)' ng-repeat='song in visibleSongs'>
+              <tr ng-repeat='song in visibleSongs'>
                 <td>{{song.artist}}</td>
                 <td>{{song.title}}</td>
+                <td><button ng-click='addSong(song)' class='btn btn-primary pull-right'><span class='glyphicon glyphicon-plus'></span></button></td>
               </tr>
             </tbody>
           </table>
