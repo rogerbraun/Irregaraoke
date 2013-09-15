@@ -34,7 +34,7 @@ window.karaokeApp.directive('cdgPlayer', ['$rootScope', function($rootScope) {
 
       $scope.massageFile = function(file) {
         console.log(file);
-        var fileName = file.replace('http:', '');
+        var fileName = file;
         fileName = fileName.replace('.cdg', '');
         fileName = fileName.replace('.mp3', '');
         return fileName;
