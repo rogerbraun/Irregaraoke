@@ -13,7 +13,7 @@ window.karaokeApp.directive('cdgPlayer', ['$rootScope', function($rootScope) {
   var directiveObject = {
     scope: true,
     restrict: 'E',
-    templateUrl: '/ng-templates/cdg-player.html',
+    templateUrl: '../../ng-templates/cdg-player.html',
     link: function($scope, iElement) {
       CDG_Player_init( "cdg_audio", "cdg_canvas", "cdg_border", "cdg_status" );
 
