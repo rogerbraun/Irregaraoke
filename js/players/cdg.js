@@ -13,7 +13,16 @@ window.karaokeApp.directive('cdgPlayer', ['$rootScope', function($rootScope) {
   var directiveObject = {
     scope: true,
     restrict: 'E',
-    templateUrl: '../../ng-templates/cdg-player.html',
+    template: ' \
+      <audio id="cdg_audio" style="width:324px"> \
+        To use the JavaScript Subcode Graphics Player,<br>you must use an HTML5 audio/canvas compatible browser. [audio] \
+      </audio> \
+       \
+      <div id="cdg_border"> \
+        <canvas id="cdg_canvas" width="288" height="192"><!--style="image-rendering: optimizeSpeed"--> \
+          To use the JavaScript Subcode Graphics Player,<br>you must use an HTML5 audio/canvas compatible browser. [canvas] \
+        </canvas> \
+      </div>',
     link: function($scope, iElement) {
       CDG_Player_init( "cdg_audio", "cdg_canvas", "cdg_border", "cdg_status" );
 
