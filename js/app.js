@@ -1,4 +1,4 @@
-window.karaokeApp = angular.module('karaokeApp', ['firebase']);
+window.karaokeApp = angular.module('karaokeApp', ['firebase', 'ui.bootstrap']);
 
 window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter', '$timeout', 'angularFire', '$rootScope', function($scope, $http, $filter, $timeout, angularFire, $rootScope) {
 
@@ -11,6 +11,9 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   $http.get('source/songs.json').success(function(data) {
     $scope.localSongs = data;
   });
+
+  $scope.currentPage = 1;
+  $scope.perPage = 10;
 
   $scope.remoteSongs = [];
   $scope.stuff = {};
@@ -30,11 +33,18 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   $scope.visibleSongs = [];
+  $scope.filteredSongs = [];
 
   var filterSongs = function() {
-    $scope.visibleSongs = $filter('filter')($scope.songs, $scope.query);
-    $scope.visibleSongs = $filter('orderBy')($scope.visibleSongs, 'artist');
-    $scope.visibleSongs = $filter('limitTo')($scope.visibleSongs, 50);
+    $scope.filteredSongs = $filter('filter')($scope.songs, $scope.query);
+    $scope.filteredSongs = $filter('orderBy')($scope.filteredSongs, 'artist');
+    $scope.currentPage = 1;
+    $scope.setVisibleSongs();
+  }
+
+  $scope.setVisibleSongs = function () {
+    var offset = ($scope.currentPage - 1) * $scope.perPage;
+    $scope.visibleSongs = $scope.filteredSongs.slice(offset, offset + $scope.perPage);
   }
 
   var combineSongs = function() {
@@ -51,6 +61,7 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   $scope.$watch('songs', filterSongs);
   $scope.$watch('localSongs', combineSongs);
   $scope.$watch('remoteSongs', combineSongs);
+  $scope.$watch('currentPage', $scope.setVisibleSongs);
 
   $scope.setQuery = function(query) {
     $scope.query = query;
@@ -79,7 +90,11 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   $scope.skipSong = function() {
-    $rootScope.$broadcast('end-song');
+    if(!$rootScope.songPlaying) {
+      $scope.playNext();
+    } else {
+      $rootScope.$broadcast('end-song');
+    }
   }
 
   $scope.slaveMode = function() {
