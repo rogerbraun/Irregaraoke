@@ -5,24 +5,52 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   var vlc = document.getElementById('karaoke-video');
 
   $scope.songs = [];
-  $scope.playList = [];
+  $scope.localSongs = [];
+
+  // Fill local songs.
+  $http.get('source/songs.json').success(function(data) {
+    $scope.localSongs = data;
+  });
+
+  $scope.remoteSongs = [];
+  $scope.stuff = {};
+  $scope.sessionName = 'standard';
+  $scope.stuff[$scope.sessionName] = {};
+  $scope.stuff[$scope.sessionName].playlist = [];
+  $scope.stuff[$scope.sessionName].name = $scope.sessionName;
+
+  $scope.playList = function() {
+    var pl = $scope.stuff[$scope.sessionName].playlist;
+    if(pl) {
+      return pl;
+    } else {
+      $scope.stuff[$scope.sessionName].playlist = [];
+      return $scope.stuff[$scope.sessionName].playlist;
+    }
+  }
 
   $scope.visibleSongs = [];
 
   var filterSongs = function() {
     $scope.visibleSongs = $filter('filter')($scope.songs, $scope.query);
     $scope.visibleSongs = $filter('orderBy')($scope.visibleSongs, 'artist');
-    $scope.visibleSongs = $filter('limitTo')($scope.visibleSongs, 250);
+    $scope.visibleSongs = $filter('limitTo')($scope.visibleSongs, 50);
   }
 
-  var plref = new Firebase('https://irregaraoke-db.firebaseio.com/playlist');
+  var combineSongs = function() {
+    $scope.songs = $scope.localSongs.concat($scope.remoteSongs);
+  }
+
+  var plref = new Firebase('https://irregaraoke-db.firebaseio.com/stuff');
   var sref = new Firebase('https://irregaraoke-db.firebaseio.com/songs');
 
-  angularFire(plref, $scope, 'playList');
-  angularFire(sref, $scope, 'songs').then(filterSongs);
+  angularFire(plref, $scope, 'stuff');
+  angularFire(sref, $scope, 'remoteSongs');
 
   $scope.$watch('query', filterSongs);
   $scope.$watch('songs', filterSongs);
+  $scope.$watch('localSongs', combineSongs);
+  $scope.$watch('remoteSongs', combineSongs);
 
   $scope.setQuery = function(query) {
     $scope.query = query;
@@ -42,10 +70,10 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   $scope.addSong = function(song) {
-    $scope.playList.push(angular.copy(song));
+    $scope.playList().push(angular.copy(song));
 
     // Start playing if this is the only song
-    if($scope.playList.length == 1 && !$rootScope.songPlaying) {
+    if($scope.playList().length == 1 && !$rootScope.songPlaying) {
       $scope.playNext();
     }
   }
@@ -59,15 +87,15 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
   }
 
   $scope.addSongToDB = function(){
-    $scope.songs.push($scope.new_song);
+    $scope.remoteSongs.push($scope.new_song);
     $scope.new_song = {};
-    filterSongs();
+    //filterSongs();
     $scope.addingSong = false;
   }
 
   $scope.removeSong = function(song) {
-    index = $scope.playList.indexOf(song);
-    $scope.playList.splice(index, 1);
+    index = $scope.playList().indexOf(song);
+    $scope.playList().splice(index, 1);
   }
 
   $scope.guessType = function(song) {
@@ -84,8 +112,8 @@ window.karaokeApp.controller('karaokeController', ['$scope', '$http', '$filter',
       return;
     }
 
-    if($scope.playList.length > 0) {
-      var song = $scope.playList.shift();
+    if($scope.playList().length > 0) {
+      var song = $scope.playList().shift();
       song.type = $scope.guessType(song);
       $rootScope.$broadcast('play-song', song);
     }

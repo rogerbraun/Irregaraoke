@@ -75,7 +75,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat='song in playList'>
+              <tr ng-repeat='song in playList()'>
                 <td>
                   {{song.artist}} - {{song.title}} <button class='btn btn-xs btn-danger pull-right' ng-click='removeSong(song)'><span class='glyphicon glyphicon-minus'/></button>
                 </td>
@@ -120,6 +120,7 @@
               <tr>
                 <th>Artist</th>
                 <th>Song</th>
+                <th>Ort</th>
                 <th></th>
               <tr>
             </thead>
@@ -127,6 +128,7 @@
               <tr ng-repeat='song in visibleSongs'>
                 <td>{{song.artist}}</td>
                 <td>{{song.title}}</td>
+                <td>{{song.file}}</td>
                 <td><button ng-click='addSong(song)' class='btn btn-primary pull-right'><span class='glyphicon glyphicon-plus'></span></button></td>
               </tr>
             </tbody>
